@@ -1,5 +1,5 @@
-const slackClient = require('./slackClient.js');
-const googleClient = require('./googleClient.js');
+const slackClient = require('./client/slackClient.js');
+const googleClient = require('./client/googleClient.js');
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 const RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 const bunyan = require('bunyan');
@@ -13,7 +13,12 @@ const SLACK_BOT_ID = process.env.SLACK_BOT_ID;
 
 const SLACK_AT_BOT =`<@${SLACK_BOT_ID}>`;
 
-if (!GOOGLE_PATH_TO_KEY || !SLACK_API_TOKEN || !CALENDAR_ID || !SLACK_BOT_ID) {
+if (_.some([
+    GOOGLE_PATH_TO_KEY,
+    SLACK_API_TOKEN,
+    CALENDAR_ID,
+    SLACK_BOT_ID
+  ], (env) => !env)) {
   log.error(`Cannot have missing env vars:
     GOOGLE_PATH_TO_KEY: ${GOOGLE_PATH_TO_KEY},
     SLACK_API_TOKEN: ${SLACK_API_TOKEN},
@@ -21,6 +26,9 @@ if (!GOOGLE_PATH_TO_KEY || !SLACK_API_TOKEN || !CALENDAR_ID || !SLACK_BOT_ID) {
     SLACK_BOT_ID: ${SLACK_BOT_ID}
   `);
   throw new Error("Startup failed validation, missing required env vars");
+}
+
+if (!GOOGLE_PATH_TO_KEY || !SLACK_API_TOKEN || !CALENDAR_ID || !SLACK_BOT_ID) {
 }
 
 const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
