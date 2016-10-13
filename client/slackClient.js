@@ -8,4 +8,14 @@ const createSlackClient = (token, logLevel) => {
   }
 };
 
-module.exports = { createSlackClient: createSlackClient };
+const isActionableReactionEvent = (slackMessage, activeUserId, reactionEmoji) => {
+  return slackMessage
+    && slackMessage.user
+    && slackMessage.item_user === activeUserId
+    && slackMessage.reaction === reactionEmoji;
+};
+
+module.exports = {
+  createSlackClient: createSlackClient,
+  isActionableReactionEvent: isActionableReactionEvent
+};
