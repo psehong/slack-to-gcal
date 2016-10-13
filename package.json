@@ -1,0 +1,18 @@
+{
+  "name": "gcal-to-slack",
+  "version": "0.0.1",
+  "description": "GCal svc acct -> slack",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Peter Hong <psehong@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@slack/client": "^3.6.0",
+    "bunyan": "^1.8.1",
+    "google-auth-library": "^0.9.8",
+    "googleapis": "^14.0.0",
+    "lodash": "^4.16.4"
+  }
+}

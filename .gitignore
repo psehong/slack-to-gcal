@@ -1,0 +1,38 @@
+### Eclipse ###
+.checkstyle
+.classpath
+.metadata
+.loadpath
+.project
+bin
+.settings/
+
+### Gradle ###
+/.gradle/
+/build/
+
+### Intellij ###
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+### Mac OSX + Windows ###
+.DS_Store
+Thumbs.db
+
+### Node ###
+/node_modules/
+npm-debug.log
+
+### SublimeText + TextMate ###
+*.sublime-workspace
+*.sublime-project
+*.tmproj
+*.tmproject
+
+### Vim ###
+*.sw[opnm]
+
+.factorypath
