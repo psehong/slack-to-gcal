@@ -6,12 +6,22 @@ const bunyan = require('bunyan');
 
 const log = bunyan.createLogger({name: 'GcalToSlack'});
 
-const GOOGLE_PATH_TO_KEY = process.env.GOOGLE_PATH_TO_KEY || '';
-const SLACK_API_TOKEN = process.env.SLACK_API_TOKEN || '';
-const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || '';
+const GOOGLE_PATH_TO_KEY = process.env.GOOGLE_PATH_TO_KEY;
+const SLACK_API_TOKEN = process.env.SLACK_API_TOKEN;
+const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
+const SLACK_BOT_ID = process.env.SLACK_BOT_ID;
 
-const SLACK_BOT_ID = process.env.SLACK_BOT_ID || '';
 const SLACK_AT_BOT =`<@${SLACK_BOT_ID}>`;
+
+if (!GOOGLE_PATH_TO_KEY || !SLACK_API_TOKEN || !CALENDAR_ID || !SLACK_BOT_ID) {
+  log.error(`Cannot have missing env vars:
+    GOOGLE_PATH_TO_KEY: ${GOOGLE_PATH_TO_KEY},
+    SLACK_API_TOKEN: ${SLACK_API_TOKEN},
+    GOOGLE_CALENDAR_ID: ${CALENDAR_ID},
+    SLACK_BOT_ID: ${SLACK_BOT_ID}
+  `);
+  throw new Error("Startup failed validation, missing required env vars");
+}
 
 const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   if (gcalResponse && gcalResponse.htmlLink) {
