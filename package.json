@@ -1,7 +1,7 @@
 {
-  "name": "gcal-to-slack",
+  "name": "slack-to-gcal",
   "version": "0.0.1",
-  "description": "GCal svc acct -> slack",
+  "description": "Slack -> GCal svc acct",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
