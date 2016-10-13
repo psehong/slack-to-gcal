@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const slackClient = require('./client/slackClient.js');
 const googleClient = require('./client/googleClient.js');
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -26,9 +27,6 @@ if (_.some([
     SLACK_BOT_ID: ${SLACK_BOT_ID}
   `);
   throw new Error("Startup failed validation, missing required env vars");
-}
-
-if (!GOOGLE_PATH_TO_KEY || !SLACK_API_TOKEN || !CALENDAR_ID || !SLACK_BOT_ID) {
 }
 
 const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
