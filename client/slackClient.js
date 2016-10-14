@@ -10,7 +10,9 @@ const createSlackClient = (token, logLevel) => {
 
 const isActionableReactionEvent = (slackMessage, activeUserId, reactionEmoji) => {
   return slackMessage
-    && slackMessage.user
+    && slackMessage.hasOwnProperty('user')
+    && slackMessage.hasOwnProperty('item_user')
+    && slackMessage.hasOwnProperty('reaction')
     && slackMessage.item_user === activeUserId
     && slackMessage.reaction === reactionEmoji;
 };

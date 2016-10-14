@@ -9,15 +9,27 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./node_modules/mocha/bin/mocha",
+    "jshint": "node ./node_modules/jshint/bin/jshint **.js"
   },
   "author": "Peter Hong <psehong@gmail.com>",
   "license": "MIT",
+  "jshintConfig": {
+    "curly": true,
+    "eqeqeq": true,
+    "esversion": 6
+  },
   "dependencies": {
     "@slack/client": "^3.6.0",
     "bunyan": "^1.8.1",
     "google-auth-library": "^0.9.8",
     "googleapis": "^14.0.0",
     "lodash": "^4.16.4"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "jshint": "^2.9.3",
+    "mocha": "^3.1.2",
+    "rewire": "^2.5.2"
   }
 }
