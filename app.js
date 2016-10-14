@@ -48,7 +48,7 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
 const findReactionMessage = (slackWebClient, gcalSlackClient, slackMessage, onReactionMessageFound) => {
   log.info(`Receives Slack reaction added ${JSON.stringify(slackMessage)}`);
   const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
-  if (reactionUser) {
+  if (reactionUser && reactionUser.email) {
     log.info(`Found reaction user: ${JSON.stringify(reactionUser)}`);
     slackWebClient.groups.history(slackMessage.item.channel, {
       channel: slackMessage.item.channel,
@@ -59,6 +59,8 @@ const findReactionMessage = (slackWebClient, gcalSlackClient, slackMessage, onRe
       log.info(`Message found for event ID: ${JSON.stringify(response)}`);
       onReactionMessageFound(reactionUser, response);
     });
+  } else if (!reactionUser.email) {
+    log.error(`reationUser must have an email address, message: ${JSON.stringify(slackMessage)}`);
   } else {
     log.error(`Failed to get reactionUser for reaction added event and Slack message: ${JSON.stringify(slackMessage)}`);
   }

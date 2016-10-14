@@ -38,6 +38,26 @@ const quickAddEvent = (client, calendarId) => {
   };
 };
 
+const updateAttendees = (gcalEvent, attendeesToAdd, attendeesToRemove) => {
+  let gcalEventCopy = Object.assign({}, gcalEvent);
+  if (attendeesToAdd.length > 0) {
+    if (gcalEvent.attendees) {
+      gcalEventCopy = _.assign(gcalEventCopy, { attendees: [...gcalEvent.attendees, ...attendeesToAdd] });
+    } else {
+      gcalEventCopy = _.assign(gcalEventCopy, { attendees: attendeesToAdd });
+    }
+  }
+  if (attendeesToRemove.length > 0) {
+    if (gcalEvent.attendees) {
+      const attendeeToRemoveEmails = new Set(_.map(attendeesToRemove, (attendee) => attendee.email));
+      gcalEventCopy = _.assign(gcalEventCopy, {
+        attendees: _.filter(gcalEvent.attendees, (oldAttendee) => !attendeeToRemoveEmails.has(oldAttendee))
+      });
+    }
+  }
+  return gcalEventCopy;
+};
+
 const setAttendingEvent = (client, calendarId, eventId, attendee) => {
   return (onUpdate) => {
     client.events.get({
@@ -48,24 +68,10 @@ const setAttendingEvent = (client, calendarId, eventId, attendee) => {
         log.error(`Could not get event from GCal: ${JSON.stringify(error)}`);
       } else {
         log.info(`Set attending GCal response: ${JSON.stringify(response)}`);
-        const oldResource = Object.assign({ attendees: [] }, response);
-        if (response.attendees) {
-          oldResource.attendees = [...response.attendees, {
-            id: attendee.id,
-            email: attendee.email,
-            displayName: attendee.displayName
-          }];
-        } else {
-          oldResource.attendees.push({
-            id: attendee.id,
-            email: attendee.email,
-            displayName: attendee.displayName
-          });
-        }
         client.events.update({
           calendarId: calendarId,
           eventId: eventId,
-          resource: oldResource
+          resource: updateAttendees(response, [attendee], [])
         }, (error, response) => {
           if (error) {
             log.error(`Could not add attendee to event: ${JSON.stringify(error)}`);
@@ -90,13 +96,10 @@ const setNotAttendingEvent = (client, calendarId, eventId, attendee) => {
       } else {
         log.info(`Removing attendee GCal response: ${JSON.stringify(response)}`);
         if (response.attendees) {
-          const updatedEvent = _.assign(Object.assign({}, response), {
-            attendees: _.filter(response.attendees, (attendee) => attendee.email !== attendee.email)
-          });
           client.events.update({
             calendarId: calendarId,
             eventId: eventId,
-            resource: updatedEvent
+            resource: updateAttendees(response, [], [attendee])
           }, (error, response) => {
             if (error) {
               log.error(`Could not remove attendee: ${JSON.stringify(error)}`);
