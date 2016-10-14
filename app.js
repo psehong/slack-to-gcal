@@ -3,6 +3,7 @@ const slackClient = require('./client/slackClient.js');
 const googleClient = require('./client/googleClient.js');
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 const RTM_EVENTS = require('@slack/client').RTM_EVENTS;
+const WebClient = require('@slack/client').WebClient;
 const bunyan = require('bunyan');
 
 const log = bunyan.createLogger({name: 'SlackToGcal'});
@@ -33,11 +34,39 @@ if (_.some([
 
 const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   if (gcalResponse && gcalResponse.htmlLink) {
-    gcalSlackClient.sendMessage(`Created event, edit or view here: ${gcalResponse.htmlLink}`, slackMessage.channel);
+    gcalSlackClient.sendMessage(`Created event, edit or view here: ${gcalResponse.htmlLink}`
+      + `\nEvent ID: ${gcalResponse.id}`,
+      slackMessage.channel);
   } else {
-    log.warn(`Failed to write GCal event for slackMessage: ${JSON.stringify(slackMessage)}
-            and GCal response: ${JSON.stringify(gcalResponse)}`);
+    log.warn(`Failed to write GCal event for slackMessage: ${JSON.stringify(slackMessage)}`
+      + `and GCal response: ${JSON.stringify(gcalResponse)}`);
     gcalSlackClient.sendMessage("I couldn't create this event, sorry :(", slackMessage.channel);
+  }
+};
+
+const setAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessage) => {
+  log.info(`Receives Slack reaction added ${JSON.stringify(slackMessage)}`);
+  const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
+  if (reactionUser) {
+    log.info(`Found reaction user: ${JSON.stringify(reactionUser)}`);
+    slackWebClient.groups.history(slackMessage.item.channel, {
+      channel: slackMessage.item.channel,
+      latest: slackMessage.item.ts,
+      count: 1,
+      inclusive: 1
+    }, (error, response) => {
+      log.info(`Message found for event ID: ${JSON.stringify(response)}`);
+      googleClient.setAttendingEvent(
+        gcalClient,
+        CALENDAR_ID,
+        response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
+          id: reactionUser.id,
+          email: reactionUser.profile.email,
+          displayName: reactionUser.real_name
+        })(() => {});
+    });
+  } else {
+    log.error(`Failed to get reactionUser for reaction added event and Slack message: ${JSON.stringify(slackMessage)}`);
   }
 };
 
@@ -45,6 +74,8 @@ const initClients = () => {
   const gcalClient = googleClient.createGoogleClient(googleJwtClient);
   const addEvent = googleClient.quickAddEvent(gcalClient, CALENDAR_ID);
   const gcalSlackClient = slackClient.createSlackClient(SLACK_API_TOKEN, addEvent);
+  // Need as some methods not available in the rtm client
+  const slackWebClient = new WebClient(SLACK_API_TOKEN);
   gcalSlackClient.start();
 
   gcalSlackClient.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
@@ -53,9 +84,7 @@ const initClients = () => {
 
   gcalSlackClient.on(RTM_EVENTS.REACTION_ADDED, (slackMessage) => {
     if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_ATTENDING_REACTION)) {
-      log.info(JSON.stringify(slackMessage));
-      const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
-      log.info(JSON.stringify(reactionUser));
+      setAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
     }
   });
 
