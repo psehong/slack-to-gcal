@@ -38,7 +38,7 @@ describe("googleClient", () => {
     });
     it("Removes attendees to event with existing attendees", () => {
       const updateAttendees = googleClient.__get__('updateAttendees');
-      const mockGcalEvent = {
+      const beforeGcalEvent = {
         calendarId: 'calendarTest',
         eventId: 'eventTest',
         attendees: [{
@@ -47,8 +47,17 @@ describe("googleClient", () => {
           displayName: 'Cal Bot'
         }, newAttendee]
       };
-      const actual = updateAttendees(mockGcalEvent, [], [newAttendee]);
-      const expected = mockGcalEvent;
+      const afterGcalEvent = {
+        calendarId: 'calendarTest',
+        eventId: 'eventTest',
+        attendees: [{
+          id: 'calbot',
+          email: 'calbot@calbot.com',
+          displayName: 'Cal Bot'
+        }]
+      };
+      const actual = updateAttendees(beforeGcalEvent, [], [newAttendee]);
+      const expected = afterGcalEvent;
       assert.isTrue(_.isEqual(actual, expected));
     });
     it("Does nothing in attempt to remove attendees to event with no attendees", () => {
