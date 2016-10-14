@@ -34,6 +34,7 @@ if (_.some([
 
 const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   if (gcalResponse && gcalResponse.htmlLink) {
+    log.info(`Created GCal event with response: ${gcalResponse}`);
     gcalSlackClient.sendMessage(`Created event, edit or view here: ${gcalResponse.htmlLink}` +
       `\nReact to this message with :white_check_mark: to RSVP yes, remove the reaction to RSVP no!` +
       `\nEvent ID: ${gcalResponse.id}`,
@@ -48,7 +49,7 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
 const findReactionMessage = (slackWebClient, gcalSlackClient, slackMessage, onReactionMessageFound) => {
   log.info(`Receives Slack reaction added ${JSON.stringify(slackMessage)}`);
   const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
-  if (reactionUser && reactionUser.email) {
+  if (reactionUser && reactionUser.profile.email) {
     log.info(`Found reaction user: ${JSON.stringify(reactionUser)}`);
     slackWebClient.groups.history(slackMessage.item.channel, {
       channel: slackMessage.item.channel,

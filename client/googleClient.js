@@ -49,9 +49,11 @@ const updateAttendees = (gcalEvent, attendeesToAdd, attendeesToRemove) => {
   }
   if (attendeesToRemove.length > 0) {
     if (gcalEvent.attendees) {
-      const attendeeToRemoveEmails = new Set(_.map(attendeesToRemove, (attendee) => attendee.email));
+      log.info(`To remove: ${JSON.stringify(attendeesToRemove)}`);
       gcalEventCopy = _.assign(gcalEventCopy, {
-        attendees: _.filter(gcalEvent.attendees, (oldAttendee) => !attendeeToRemoveEmails.has(oldAttendee))
+        attendees: _.filter(gcalEvent.attendees, (oldAttendee) => {
+          return !_.some(attendeesToRemove, (remove) => oldAttendee.email === remove.email)
+        })
       });
     }
   }
