@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const assert = require('chai').assert;
 
 const slackClient = require('../client/slackClient.js');
