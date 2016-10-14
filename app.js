@@ -15,7 +15,7 @@ const SLACK_BOT_ID = process.env.SLACK_BOT_ID;
 
 const SLACK_AT_BOT =`<@${SLACK_BOT_ID}>`;
 const SLACK_ATTENDING_REACTION = process.env.SLACK_ATTENDING_REACTION || 'white_check_mark';
-const SLACK_NOT_ATTENDING_REACTION = process.env.SLACK_NOT_ATTENDING_REACTION || 'x';
+const SLACK_NOT_ATTENDING_REACTION = process.env.SLACK_NOT_ATTENDING_REACTION || 'white_check_mark';
 
 if (_.some([
     GOOGLE_PATH_TO_KEY,
@@ -44,7 +44,7 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   }
 };
 
-const setAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessage) => {
+const findReactionMessage = (slackWebClient, gcalSlackClient, slackMessage, onReactionMessageFound) => {
   log.info(`Receives Slack reaction added ${JSON.stringify(slackMessage)}`);
   const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
   if (reactionUser) {
@@ -56,18 +56,37 @@ const setAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessage)
       inclusive: 1
     }, (error, response) => {
       log.info(`Message found for event ID: ${JSON.stringify(response)}`);
-      googleClient.setAttendingEvent(
-        gcalClient,
-        CALENDAR_ID,
-        response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
-          id: reactionUser.id,
-          email: reactionUser.profile.email,
-          displayName: reactionUser.real_name
-        })(() => {});
+      onReactionMessageFound(reactionUser, response);
     });
   } else {
     log.error(`Failed to get reactionUser for reaction added event and Slack message: ${JSON.stringify(slackMessage)}`);
   }
+};
+
+const setAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessage) => {
+  findReactionMessage(slackWebClient, gcalSlackClient, slackMessage, (reactionUser, response) => {
+    googleClient.setAttendingEvent(
+      gcalClient,
+      CALENDAR_ID,
+      response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
+        id: reactionUser.id,
+        email: reactionUser.profile.email,
+        displayName: reactionUser.real_name
+      })(() => {});
+  });
+};
+
+const setNotAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessage) => {
+  findReactionMessage(slackWebClient, gcalSlackClient, slackMessage, (reactionUser, response) => {
+    googleClient.setNotAttendingEvent(
+      gcalClient,
+      CALENDAR_ID,
+      response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
+        id: reactionUser.id,
+        email: reactionUser.profile.email,
+        displayName: reactionUser.real_name
+      })(() => {});
+  });
 };
 
 const initClients = () => {
@@ -93,9 +112,7 @@ const initClients = () => {
         slackMessage,
         gcalSlackClient.activeUserId,
         SLACK_NOT_ATTENDING_REACTION)) {
-      log.info(JSON.stringify(slackMessage));
-      const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
-      log.info(JSON.stringify(reactionUser));
+      setNotAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
     }
   });
 

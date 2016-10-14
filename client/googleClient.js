@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const google = require('googleapis');
 const bunyan = require('bunyan');
 
@@ -44,7 +45,7 @@ const setAttendingEvent = (client, calendarId, eventId, attendee) => {
       eventId: eventId
     }, (error, response) => {
       if (error) {
-        log.error(`Could not quick add event: ${JSON.stringify(error)}`);
+        log.error(`Could not get event from GCal: ${JSON.stringify(error)}`);
       } else {
         log.info(`Set attending GCal response: ${JSON.stringify(response)}`);
         const oldResource = Object.assign({ attendees: [] }, response);
@@ -67,7 +68,7 @@ const setAttendingEvent = (client, calendarId, eventId, attendee) => {
           resource: oldResource
         }, (error, response) => {
           if (error) {
-            log.error(`Could not quick add event: ${JSON.stringify(error)}`);
+            log.error(`Could not add attendee to event: ${JSON.stringify(error)}`);
           } else {
             log.info(`Successfully added attendee, GCal response: ${JSON.stringify(response)}`);
             onUpdate(response);
@@ -78,8 +79,35 @@ const setAttendingEvent = (client, calendarId, eventId, attendee) => {
   };
 };
 
-const setNotAttendingEvent = (client, eventId, attendee) => {
+const setNotAttendingEvent = (client, calendarId, eventId, attendee) => {
   return (onUpdate) => {
+    client.events.get({
+      calendarId: calendarId,
+      eventId: eventId
+    }, (error, response) => {
+      if (error) {
+        log.error(`Could not get event from GCal: ${JSON.stringify(error)}`);
+      } else {
+        log.info(`Removing attendee GCal response: ${JSON.stringify(response)}`);
+        if (response.attendees) {
+          const updatedEvent = _.assign(Object.assign({}, response), {
+            attendees: _.filter(response.attendees, (attendee) => attendee.email !== attendee.email)
+          });
+          client.events.update({
+            calendarId: calendarId,
+            eventId: eventId,
+            resource: updatedEvent
+          }, (error, response) => {
+            if (error) {
+              log.error(`Could not remove attendee: ${JSON.stringify(error)}`);
+            } else {
+              log.info(`Successfully removed attendee, GCal response: ${JSON.stringify(response)}`);
+              onUpdate(response);
+            }
+          });
+        }
+      }
+    });
   };
 };
 
@@ -87,5 +115,6 @@ module.exports = {
   createJwtClient: createJwtClient,
   createGoogleClient: createGoogleClient,
   quickAddEvent: quickAddEvent,
-  setAttendingEvent: setAttendingEvent
+  setAttendingEvent: setAttendingEvent,
+  setNotAttendingEvent: setNotAttendingEvent
 };
