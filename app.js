@@ -34,13 +34,13 @@ if (_.some([
 
 const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   if (gcalResponse && gcalResponse.htmlLink) {
-    gcalSlackClient.sendMessage(`Created event, edit or view here: ${gcalResponse.htmlLink}`
-      + `\nReact to this message with :white_check_mark: to RSVP yes, remove the reaction to RSVP no!`
-      + `\nEvent ID: ${gcalResponse.id}`,
+    gcalSlackClient.sendMessage(`Created event, edit or view here: ${gcalResponse.htmlLink}` +
+      `\nReact to this message with :white_check_mark: to RSVP yes, remove the reaction to RSVP no!` +
+      `\nEvent ID: ${gcalResponse.id}`,
       slackMessage.channel);
   } else {
-    log.warn(`Failed to write GCal event for slackMessage: ${JSON.stringify(slackMessage)}`
-      + `and GCal response: ${JSON.stringify(gcalResponse)}`);
+    log.warn(`Failed to write GCal event for slackMessage: ${JSON.stringify(slackMessage)}` +
+      `and GCal response: ${JSON.stringify(gcalResponse)}`);
     gcalSlackClient.sendMessage("I couldn't create this event, sorry :(", slackMessage.channel);
   }
 };
