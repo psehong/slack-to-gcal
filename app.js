@@ -75,7 +75,8 @@ const setAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessage)
       response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
         id: reactionUser.id,
         email: reactionUser.profile.email,
-        displayName: reactionUser.profile.real_name
+        displayName: reactionUser.profile.real_name,
+        responseStatus: 'accepted'
       })(() => {});
   });
 };
@@ -88,7 +89,8 @@ const setNotAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessa
       response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
         id: reactionUser.id,
         email: reactionUser.profile.email,
-        displayName: reactionUser.profile.real_name
+        displayName: reactionUser.profile.real_name,
+        responseStatus: 'declined'
       })(() => {});
   });
 };

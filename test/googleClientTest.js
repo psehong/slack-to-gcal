@@ -11,33 +11,34 @@ describe("googleClient", () => {
       email: 'test@test.com',
       displayName: 'Test'
     };
-    it("Adds attendees to event with no attendees", () => {
-      const updateAttendees = googleClient.__get__('updateAttendees');
+    const newAcceptedAttendee = Object.assign({ responseStatus: 'accepted' }, newAttendee);
+    const newDeclinedAttendee = Object.assign({ responseStatus: 'declined' }, newAttendee);
+    const updateAttendees = googleClient.__get__('updateAttendees');
+    it("Adds new attendee to event with no attendees", () => {
       const mockGcalEvent = {
         calendarId: 'calendarTest',
         eventId: 'eventTest'
       };
-      const actual = updateAttendees(mockGcalEvent, [newAttendee], []);
-      const expected = _.assign(mockGcalEvent, { attendees: [newAttendee] });
+      const actual = updateAttendees(mockGcalEvent, [newAcceptedAttendee]);
+      const expected = _.assign(mockGcalEvent, { attendees: [newAcceptedAttendee] });
       assert.isTrue(_.isEqual(actual, expected));
     });
     it("Adds attendees to event with existing attendees", () => {
-      const updateAttendees = googleClient.__get__('updateAttendees');
       const mockGcalEvent = {
         calendarId: 'calendarTest',
         eventId: 'eventTest',
         attendees: [{
           id: 'calbot',
           email: 'calbot@calbot.com',
-          displayName: 'Cal Bot'
+          displayName: 'Cal Bot',
+          responseStatus: 'declined'
         }]
       };
-      const actual = updateAttendees(mockGcalEvent, [newAttendee], []);
-      const expected = _.assign(mockGcalEvent, { attendees: [...mockGcalEvent.attendees, newAttendee] });
+      const actual = updateAttendees(mockGcalEvent, [newDeclinedAttendee]);
+      const expected = _.assign(mockGcalEvent, { attendees: [...mockGcalEvent.attendees, newDeclinedAttendee] });
       assert.isTrue(_.isEqual(actual, expected));
     });
-    it("Removes attendees to event with existing attendees", () => {
-      const updateAttendees = googleClient.__get__('updateAttendees');
+    it("Sets declined attendees to event with existing accepted attendees", () => {
       const beforeGcalEvent = {
         calendarId: 'calendarTest',
         eventId: 'eventTest',
@@ -45,7 +46,7 @@ describe("googleClient", () => {
           id: 'calbot',
           email: 'calbot@calbot.com',
           displayName: 'Cal Bot'
-        }, newAttendee]
+        }, newAcceptedAttendee]
       };
       const afterGcalEvent = {
         calendarId: 'calendarTest',
@@ -54,20 +55,33 @@ describe("googleClient", () => {
           id: 'calbot',
           email: 'calbot@calbot.com',
           displayName: 'Cal Bot'
-        }]
+        }, newDeclinedAttendee]
       };
-      const actual = updateAttendees(beforeGcalEvent, [], [newAttendee]);
+      const actual = updateAttendees(beforeGcalEvent, [newDeclinedAttendee]);
       const expected = afterGcalEvent;
       assert.isTrue(_.isEqual(actual, expected));
     });
-    it("Does nothing in attempt to remove attendees to event with no attendees", () => {
-      const updateAttendees = googleClient.__get__('updateAttendees');
-      const mockGcalEvent = {
+    it("Sets accepted attendees to event with existing declined attendees", () => {
+      const beforeGcalEvent = {
         calendarId: 'calendarTest',
-        eventId: 'eventTest'
+        eventId: 'eventTest',
+        attendees: [{
+          id: 'calbot',
+          email: 'calbot@calbot.com',
+          displayName: 'Cal Bot'
+        }, newDeclinedAttendee]
       };
-      const actual = updateAttendees(mockGcalEvent, [], [newAttendee]);
-      const expected = mockGcalEvent;
+      const afterGcalEvent = {
+        calendarId: 'calendarTest',
+        eventId: 'eventTest',
+        attendees: [{
+          id: 'calbot',
+          email: 'calbot@calbot.com',
+          displayName: 'Cal Bot'
+        }, newAcceptedAttendee]
+      };
+      const actual = updateAttendees(beforeGcalEvent, [newAcceptedAttendee]);
+      const expected = afterGcalEvent;
       assert.isTrue(_.isEqual(actual, expected));
     });
   });
