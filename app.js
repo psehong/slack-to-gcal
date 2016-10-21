@@ -59,16 +59,17 @@ const listGcalEvents = (getEvent, slackWebClient, channelId) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
         slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
+          as_user: true,
           attachments: _.map(response.items, (event) => {
             return {
               fallback: event.summary,
               color: '#FF69B4',
               title: event.summary,
               title_link: event.htmlLink,
-              text: `From: ${event.start.dateTime} to ${event.end.dateTime}` +
-              `\nLocation: ${event.location}` +
-              `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
-              `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
+              text: `From: ${moment(event.start.dateTime).format('h:mm A')} to ${moment(event.end.dateTime).format('h:mm A')}` +
+                `\nLocation: ${event.location ? event.location : 'None'}`,
+              footer: `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
+                `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
             };
           })
         });
