@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const google = require('googleapis');
 const bunyan = require('bunyan');
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const log = bunyan.createLogger({name: 'googleClient'});
 

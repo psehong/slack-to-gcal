@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const slackClient = require('./client/slackClient.js');
 const googleClient = require('./client/googleClient.js');
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -7,7 +7,17 @@ const RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 const WebClient = require('@slack/client').WebClient;
 const bunyan = require('bunyan');
 
-const log = bunyan.createLogger({name: 'SlackToGcal'});
+const log = bunyan.createLogger({
+  name: 'SlackToGcal',
+  streams: [{
+      level: 'info',
+      stream: process.stdout
+    }, {
+      level: 'info',
+      path: 'slack-to-gcal-info.log'
+    }
+  ]
+});
 
 const GOOGLE_PATH_TO_KEY = process.env.GOOGLE_PATH_TO_KEY;
 const SLACK_API_TOKEN = process.env.SLACK_API_TOKEN;
@@ -53,20 +63,27 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
 const listGcalEvents = (getEvent, slackWebClient, channelId) => {
   if (getEvent && slackWebClient) {
     log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
-    const start = moment().startOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]');
-    const end = moment().endOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]');
+    const start = moment().clone().tz('America/New_York').startOf('day').format('YYYY-MM-DD[T]HH:mm:ssZ');
+    const end = moment().clone().tz('America/New_York').endOf('day').format('YYYY-MM-DD[T]HH:mm:ssZ');
+    log.info(`Query, start: ${start}, end: ${end}`);
     getEvent(CALENDAR_ID, start, end, (response) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
         slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
           as_user: true,
           attachments: _.map(response.items, (event) => {
+            const from = event.start.dateTime ?
+              moment(event.start.dateTime).clone().tz('America/New_York').format('h:mm A z') :
+              'None';
+            const to = event.end.dateTime ?
+              moment(event.end.dateTime).clone().tz('America/New_York').format('h:mm A z') :
+              'None';
             return {
               fallback: event.summary,
               color: '#FF69B4',
               title: event.summary,
               title_link: event.htmlLink,
-              text: `From: ${moment(event.start.dateTime).format('h:mm A')} to ${moment(event.end.dateTime).format('h:mm A')}` +
+              text: `From: ${from} to ${to}` +
                 `\nLocation: ${event.location ? event.location : 'None'}`,
               footer: `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
                 `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
