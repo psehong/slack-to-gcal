@@ -49,6 +49,32 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   }
 };
 
+const listGcalEvents = (gcalClient, slackWebClient, channelId) => {
+  if (gcalClient && slackWebClient) {
+    log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
+    const events = gcalClient.getEvent(CALENDAR_ID);
+    log.info(`Events: ${JSON.stringify(events)}`);
+    if (events && events.items) {
+      slackWebClient.chat.postMessage(channelId, `There are ${events.items.length} events today`, {
+        attachments: _.map(events.items, (event) => {
+          return {
+            fallback: event.summary,
+            color: '#FF69B4',
+            title: event.summary,
+            title_link: event.htmlLink,
+            text: `From: ${event.start.dateTime} to ${event.end.dateTime}` +
+              `\nLocation: ${event.location}` +
+              `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
+              `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
+          }
+        })
+      });
+    }
+  } else {
+    log.error(`Missing a client, gcalClient: ${gcalClient},slackWebClient: ${slackWebClient}`);
+  }
+};
+
 const findReactionMessage = (slackWebClient, gcalSlackClient, slackMessage, onReactionMessageFound) => {
   log.info(`Receives Slack reaction added ${JSON.stringify(slackMessage)}`);
   const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
@@ -127,9 +153,13 @@ const initClients = () => {
   gcalSlackClient.on(RTM_EVENTS.MESSAGE, (slackMessage) => {
     if (slackMessage && slackMessage.text && slackMessage.text.includes(SLACK_AT_BOT)) {
       log.info(`Received Slack message ${JSON.stringify(slackMessage)}`);
-      addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
-        onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
-      });
+      if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'today') {
+        listGcalEvents(gcalClient, slackWebClient, slackMessage.channel);
+      } else {
+        addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
+          onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
+        });
+      }
     }
   });
 };
