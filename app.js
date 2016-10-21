@@ -36,7 +36,7 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   if (gcalResponse && gcalResponse.htmlLink) {
     log.info(`Created GCal event with response: ${JSON.stringify(gcalResponse)}`);
     gcalSlackClient.sendMessage(
-      `*${gcalResponse.summary}*` +
+      `*Event Title: ${gcalResponse.summary}*` +
       `\nCreated event, edit or view here: ${gcalResponse.htmlLink}` +
       `\nReact with :white_check_mark: to RSVP *yes*!` +
       `\nReact with :x: or remove your :white_check_mark: reaction to RSVP *no*!` +
@@ -119,8 +119,7 @@ const initClients = () => {
   });
 
   gcalSlackClient.on(RTM_EVENTS.REACTION_REMOVED, (slackMessage) => {
-    if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_NOT_ATTENDING_REACTION)
-      || slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_ATTENDING_REACTION)) {
+    if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_ATTENDING_REACTION)) {
       setNotAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
     }
   });
