@@ -38,7 +38,8 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
     gcalSlackClient.sendMessage(
       `*${gcalResponse.summary}*` +
       `\nCreated event, edit or view here: ${gcalResponse.htmlLink}` +
-      `\nReact to this message with :white_check_mark: to RSVP yes, remove the reaction to RSVP no!` +
+      `\nReact with :white_check_mark: to RSVP *yes*!` +
+      `\nReact with :x: or remove your :white_check_mark: reaction to RSVP *no*!` +
       `\nEvent ID: ${gcalResponse.id}`,
       slackMessage.channel);
   } else {
