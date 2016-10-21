@@ -113,6 +113,8 @@ const initClients = () => {
   gcalSlackClient.on(RTM_EVENTS.REACTION_ADDED, (slackMessage) => {
     if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_ATTENDING_REACTION)) {
       setAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
+    } else if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_NOT_ATTENDING_REACTION)) {
+      setNotAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
     }
   });
 
