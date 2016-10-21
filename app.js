@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const moment = require('moment');
 const slackClient = require('./client/slackClient.js');
 const googleClient = require('./client/googleClient.js');
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -46,6 +47,36 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
     log.warn(`Failed to write GCal event for slackMessage: ${JSON.stringify(slackMessage)}` +
       `and GCal response: ${JSON.stringify(gcalResponse)}`);
     gcalSlackClient.sendMessage("I couldn't create this event, sorry :(", slackMessage.channel);
+  }
+};
+
+const listGcalEvents = (getEvent, slackWebClient, channelId) => {
+  if (getEvent && slackWebClient) {
+    log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
+    const start = moment().startOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]');
+    const end = moment().endOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]');
+    getEvent(CALENDAR_ID, start, end, (response) => {
+      log.info(`Events: ${JSON.stringify(response)}`);
+      if (response && response.items) {
+        slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
+          as_user: true,
+          attachments: _.map(response.items, (event) => {
+            return {
+              fallback: event.summary,
+              color: '#FF69B4',
+              title: event.summary,
+              title_link: event.htmlLink,
+              text: `From: ${moment(event.start.dateTime).format('h:mm A')} to ${moment(event.end.dateTime).format('h:mm A')}` +
+                `\nLocation: ${event.location ? event.location : 'None'}`,
+              footer: `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
+                `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
+            };
+          })
+        });
+      }
+    });
+  } else {
+    log.error(`Missing a client, getEvent: ${getEvent},slackWebClient: ${slackWebClient}`);
   }
 };
 
@@ -101,6 +132,7 @@ const setNotAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessa
 const initClients = () => {
   const gcalClient = googleClient.createGoogleClient(googleJwtClient);
   const addEvent = googleClient.quickAddEvent(gcalClient, CALENDAR_ID);
+  const getEvent = googleClient.getEvent(gcalClient);
   const gcalSlackClient = slackClient.createSlackClient(SLACK_API_TOKEN, addEvent);
   // Need as some methods not available in the rtm client
   const slackWebClient = new WebClient(SLACK_API_TOKEN);
@@ -127,9 +159,13 @@ const initClients = () => {
   gcalSlackClient.on(RTM_EVENTS.MESSAGE, (slackMessage) => {
     if (slackMessage && slackMessage.text && slackMessage.text.includes(SLACK_AT_BOT)) {
       log.info(`Received Slack message ${JSON.stringify(slackMessage)}`);
-      addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
-        onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
-      });
+      if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'today') {
+        listGcalEvents(getEvent, slackWebClient, slackMessage.channel);
+      } else {
+        addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
+          onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
+        });
+      }
     }
   });
 };

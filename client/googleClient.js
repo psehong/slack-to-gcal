@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const google = require('googleapis');
 const bunyan = require('bunyan');
+const moment = require('moment');
 
 const log = bunyan.createLogger({name: 'googleClient'});
 
@@ -19,6 +20,24 @@ const createJwtClient = (pathToKey, scopes) => {
 
 const createGoogleClient = (jwtClient) => {
   return google.calendar({ version: 'v3', auth: jwtClient });
+};
+
+const getEvent = (client) => {
+  return (calendarId, timeStartString, timeEndString, onEventsReturned) => {
+    client.events.list({
+      calendarId: calendarId,
+      timeMin: timeStartString || moment().startOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]'),
+      timeMax: timeEndString || moment().endOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]')
+    }, (error, response) => {
+      if (error) {
+        log.error(`Could not get events: ${JSON.stringify(error)}`);
+        onEventsReturned({});
+      } else {
+        log.info(`Response: ${JSON.stringify(response)}`);
+        onEventsReturned(response);
+      }
+    });
+  };
 };
 
 const quickAddEvent = (client, calendarId) => {
@@ -116,5 +135,6 @@ module.exports = {
   createGoogleClient: createGoogleClient,
   quickAddEvent: quickAddEvent,
   setAttendingEvent: setAttendingEvent,
-  setNotAttendingEvent: setNotAttendingEvent
+  setNotAttendingEvent: setNotAttendingEvent,
+  getEvent: getEvent
 };
