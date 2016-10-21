@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const moment = require('moment');
 const slackClient = require('./client/slackClient.js');
 const googleClient = require('./client/googleClient.js');
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
