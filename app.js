@@ -15,7 +15,7 @@ const SLACK_BOT_ID = process.env.SLACK_BOT_ID;
 
 const SLACK_AT_BOT =`<@${SLACK_BOT_ID}>`;
 const SLACK_ATTENDING_REACTION = process.env.SLACK_ATTENDING_REACTION || 'white_check_mark';
-const SLACK_NOT_ATTENDING_REACTION = process.env.SLACK_NOT_ATTENDING_REACTION || 'white_check_mark';
+const SLACK_NOT_ATTENDING_REACTION = process.env.SLACK_NOT_ATTENDING_REACTION || 'x';
 
 if (_.some([
     GOOGLE_PATH_TO_KEY,
@@ -116,10 +116,8 @@ const initClients = () => {
   });
 
   gcalSlackClient.on(RTM_EVENTS.REACTION_REMOVED, (slackMessage) => {
-    if (slackClient.isActionableReactionEvent(
-        slackMessage,
-        gcalSlackClient.activeUserId,
-        SLACK_NOT_ATTENDING_REACTION)) {
+    if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_NOT_ATTENDING_REACTION)
+      || slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_ATTENDING_REACTION)) {
       setNotAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
     }
   });
