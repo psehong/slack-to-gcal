@@ -23,7 +23,7 @@ const createGoogleClient = (jwtClient) => {
 };
 
 const getEvent = (client, calendarId, timeStartString, timeEndString) => {
-  return client.events.list({
+  return client.list({
     calendarId: calendarId,
     timeMin: timeStartString || moment().startOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]'),
     timeMax: timeEndString || moment().endOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]')
