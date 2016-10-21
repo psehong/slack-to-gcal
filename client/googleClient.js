@@ -94,20 +94,18 @@ const setNotAttendingEvent = (client, calendarId, eventId, attendee) => {
         log.error(`Could not get event from GCal: ${JSON.stringify(error)}`);
       } else {
         log.info(`Removing attendee GCal response: ${JSON.stringify(response)}`);
-        if (response.attendees) {
-          client.events.update({
-            calendarId: calendarId,
-            eventId: eventId,
-            resource: updateAttendees(response, [attendee])
-          }, (error, response) => {
-            if (error) {
-              log.error(`Could not remove attendee: ${JSON.stringify(error)}`);
-            } else {
-              log.info(`Successfully removed attendee, GCal response: ${JSON.stringify(response)}`);
-              onUpdate(response);
-            }
-          });
-        }
+        client.events.update({
+          calendarId: calendarId,
+          eventId: eventId,
+          resource: updateAttendees(response, [attendee])
+        }, (error, response) => {
+          if (error) {
+            log.error(`Could not remove attendee: ${JSON.stringify(error)}`);
+          } else {
+            log.info(`Successfully removed attendee, GCal response: ${JSON.stringify(response)}`);
+            onUpdate(response);
+          }
+        });
       }
     });
   };

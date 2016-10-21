@@ -15,7 +15,7 @@ const SLACK_BOT_ID = process.env.SLACK_BOT_ID;
 
 const SLACK_AT_BOT =`<@${SLACK_BOT_ID}>`;
 const SLACK_ATTENDING_REACTION = process.env.SLACK_ATTENDING_REACTION || 'white_check_mark';
-const SLACK_NOT_ATTENDING_REACTION = process.env.SLACK_NOT_ATTENDING_REACTION || 'white_check_mark';
+const SLACK_NOT_ATTENDING_REACTION = process.env.SLACK_NOT_ATTENDING_REACTION || 'x';
 
 if (_.some([
     GOOGLE_PATH_TO_KEY,
@@ -36,9 +36,10 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   if (gcalResponse && gcalResponse.htmlLink) {
     log.info(`Created GCal event with response: ${JSON.stringify(gcalResponse)}`);
     gcalSlackClient.sendMessage(
-      `${gcalResponse.summary}` +
+      `*Event Title: ${gcalResponse.summary}*` +
       `\nCreated event, edit or view here: ${gcalResponse.htmlLink}` +
-      `\nReact to this message with :white_check_mark: to RSVP yes, remove the reaction to RSVP no!` +
+      `\nReact with :white_check_mark: to RSVP *yes*!` +
+      `\nReact with :x: or remove your :white_check_mark: reaction to RSVP *no*!` +
       `\nEvent ID: ${gcalResponse.id}`,
       slackMessage.channel);
   } else {
@@ -112,14 +113,13 @@ const initClients = () => {
   gcalSlackClient.on(RTM_EVENTS.REACTION_ADDED, (slackMessage) => {
     if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_ATTENDING_REACTION)) {
       setAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
+    } else if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_NOT_ATTENDING_REACTION)) {
+      setNotAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
     }
   });
 
   gcalSlackClient.on(RTM_EVENTS.REACTION_REMOVED, (slackMessage) => {
-    if (slackClient.isActionableReactionEvent(
-        slackMessage,
-        gcalSlackClient.activeUserId,
-        SLACK_NOT_ATTENDING_REACTION)) {
+    if (slackClient.isActionableReactionEvent(slackMessage, gcalSlackClient.activeUserId, SLACK_ATTENDING_REACTION)) {
       setNotAttending(gcalClient, slackWebClient, gcalSlackClient, slackMessage);
     }
   });
