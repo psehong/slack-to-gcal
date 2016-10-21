@@ -38,23 +38,20 @@ const quickAddEvent = (client, calendarId) => {
   };
 };
 
-const updateAttendees = (gcalEvent, attendeesToAdd, attendeesToRemove) => {
+const updateAttendees = (gcalEvent, newAttendees) => {
   let gcalEventCopy = Object.assign({}, gcalEvent);
-  if (attendeesToAdd.length > 0) {
+  if (newAttendees && newAttendees.length > 0) {
     if (gcalEvent.attendees) {
-      gcalEventCopy = _.assign(gcalEventCopy, { attendees: [...gcalEvent.attendees, ...attendeesToAdd] });
+      if (_.intersectionBy(gcalEvent.attendees, newAttendees, 'email').length > 0) {
+        gcalEventCopy = _.assign(gcalEventCopy, { attendees: [
+          ..._.differenceBy(gcalEvent.attendees, newAttendees, 'email'),
+          ...newAttendees
+        ]});
+      } else {
+        gcalEventCopy = _.assign(gcalEventCopy, { attendees: [...gcalEvent.attendees, ...newAttendees] });
+      }
     } else {
-      gcalEventCopy = _.assign(gcalEventCopy, { attendees: attendeesToAdd });
-    }
-  }
-  if (attendeesToRemove.length > 0) {
-    if (gcalEvent.attendees) {
-      log.info(`To remove: ${JSON.stringify(attendeesToRemove)}`);
-      gcalEventCopy = _.assign(gcalEventCopy, {
-        attendees: _.filter(gcalEvent.attendees, (oldAttendee) => {
-          return !_.some(attendeesToRemove, (remove) => oldAttendee.email === remove.email)
-        })
-      });
+      gcalEventCopy = _.assign(gcalEventCopy, { attendees: newAttendees });
     }
   }
   return gcalEventCopy;
@@ -73,7 +70,7 @@ const setAttendingEvent = (client, calendarId, eventId, attendee) => {
         client.events.update({
           calendarId: calendarId,
           eventId: eventId,
-          resource: updateAttendees(response, [attendee], [])
+          resource: updateAttendees(response, [attendee])
         }, (error, response) => {
           if (error) {
             log.error(`Could not add attendee to event: ${JSON.stringify(error)}`);
@@ -101,7 +98,7 @@ const setNotAttendingEvent = (client, calendarId, eventId, attendee) => {
           client.events.update({
             calendarId: calendarId,
             eventId: eventId,
-            resource: updateAttendees(response, [], [attendee])
+            resource: updateAttendees(response, [attendee])
           }, (error, response) => {
             if (error) {
               log.error(`Could not remove attendee: ${JSON.stringify(error)}`);
