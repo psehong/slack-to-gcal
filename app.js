@@ -36,7 +36,7 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   if (gcalResponse && gcalResponse.htmlLink) {
     log.info(`Created GCal event with response: ${JSON.stringify(gcalResponse)}`);
     gcalSlackClient.sendMessage(
-      `${gcalResponse.summary}` +
+      `*${gcalResponse.summary}*` +
       `\nCreated event, edit or view here: ${gcalResponse.htmlLink}` +
       `\nReact to this message with :white_check_mark: to RSVP yes, remove the reaction to RSVP no!` +
       `\nEvent ID: ${gcalResponse.id}`,
