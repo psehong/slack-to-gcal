@@ -55,6 +55,7 @@ const listGcalEvents = (getEvent, slackWebClient, channelId) => {
     log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
     const start = moment().startOf('day').clone().tz('America/New_York').format('YYYY-MM-DD[T]HH:mm:ssZ');
     const end = moment().endOf('day').clone().tz('America/New_York').format('YYYY-MM-DD[T]HH:mm:ssZ');
+    log.info(`Query, start: ${start}, end: ${end}`);
     getEvent(CALENDAR_ID, start, end, (response) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
@@ -66,7 +67,7 @@ const listGcalEvents = (getEvent, slackWebClient, channelId) => {
               color: '#FF69B4',
               title: event.summary,
               title_link: event.htmlLink,
-              text: `From: ${moment(event.start.dateTime).format('h:mm A')} to ${moment(event.end.dateTime).format('h:mm A')}` +
+              text: `From: ${moment(event.start.dateTime).format('h:mm A z')} to ${moment(event.end.dateTime).format('h:mm A z')}` +
                 `\nLocation: ${event.location ? event.location : 'None'}`,
               footer: `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
                 `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
