@@ -7,7 +7,17 @@ const RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 const WebClient = require('@slack/client').WebClient;
 const bunyan = require('bunyan');
 
-const log = bunyan.createLogger({name: 'SlackToGcal'});
+const log = bunyan.createLogger({
+  name: 'SlackToGcal',
+  streams: [{
+      level: 'info',
+      stream: process.stdout
+    }, {
+      level: 'info',
+      path: 'slack-to-gcal-info.log'
+    }
+  ]
+});
 
 const GOOGLE_PATH_TO_KEY = process.env.GOOGLE_PATH_TO_KEY;
 const SLACK_API_TOKEN = process.env.SLACK_API_TOKEN;
