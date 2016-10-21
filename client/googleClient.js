@@ -22,7 +22,7 @@ const createGoogleClient = (jwtClient) => {
   return google.calendar({ version: 'v3', auth: jwtClient });
 };
 
-const getEvent = (calendarId, timeStartString, timeEndString) => {
+const getEvent = (client, calendarId, timeStartString, timeEndString) => {
   return client.events.list({
     calendarId: calendarId,
     timeMin: timeStartString || moment().startOf('day').toISOString(),

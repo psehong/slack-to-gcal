@@ -49,10 +49,10 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   }
 };
 
-const listGcalEvents = (gcalClient, slackWebClient, channelId) => {
-  if (gcalClient && slackWebClient) {
+const listGcalEvents = (getEvent, slackWebClient, channelId) => {
+  if (getEvent && slackWebClient) {
     log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
-    const events = gcalClient.getEvent(CALENDAR_ID);
+    const events = getEvent(CALENDAR_ID);
     log.info(`Events: ${JSON.stringify(events)}`);
     if (events && events.items) {
       slackWebClient.chat.postMessage(channelId, `There are ${events.items.length} events today`, {
@@ -66,12 +66,12 @@ const listGcalEvents = (gcalClient, slackWebClient, channelId) => {
               `\nLocation: ${event.location}` +
               `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
               `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
-          }
+          };
         })
       });
     }
   } else {
-    log.error(`Missing a client, gcalClient: ${gcalClient},slackWebClient: ${slackWebClient}`);
+    log.error(`Missing a client, getEvent: ${getEvent},slackWebClient: ${slackWebClient}`);
   }
 };
 
@@ -127,6 +127,7 @@ const setNotAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessa
 const initClients = () => {
   const gcalClient = googleClient.createGoogleClient(googleJwtClient);
   const addEvent = googleClient.quickAddEvent(gcalClient, CALENDAR_ID);
+  const getEvent = _.partial(googleClient.getEvent, gcalClient);
   const gcalSlackClient = slackClient.createSlackClient(SLACK_API_TOKEN, addEvent);
   // Need as some methods not available in the rtm client
   const slackWebClient = new WebClient(SLACK_API_TOKEN);
@@ -154,7 +155,7 @@ const initClients = () => {
     if (slackMessage && slackMessage.text && slackMessage.text.includes(SLACK_AT_BOT)) {
       log.info(`Received Slack message ${JSON.stringify(slackMessage)}`);
       if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'today') {
-        listGcalEvents(gcalClient, slackWebClient, slackMessage.channel);
+        listGcalEvents(getEvent, slackWebClient, slackMessage.channel);
       } else {
         addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
           onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
