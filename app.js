@@ -52,24 +52,25 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
 const listGcalEvents = (getEvent, slackWebClient, channelId) => {
   if (getEvent && slackWebClient) {
     log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
-    const events = getEvent(CALENDAR_ID);
-    log.info(`Events: ${JSON.stringify(events)}`);
-    if (events && events.items) {
-      slackWebClient.chat.postMessage(channelId, `There are ${events.items.length} events today`, {
-        attachments: _.map(events.items, (event) => {
-          return {
-            fallback: event.summary,
-            color: '#FF69B4',
-            title: event.summary,
-            title_link: event.htmlLink,
-            text: `From: ${event.start.dateTime} to ${event.end.dateTime}` +
+    getEvent(CALENDAR_ID, (response) => {
+      log.info(`Events: ${JSON.stringify(response)}`);
+      if (response && response.items) {
+        slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
+          attachments: _.map(response.items, (event) => {
+            return {
+              fallback: event.summary,
+              color: '#FF69B4',
+              title: event.summary,
+              title_link: event.htmlLink,
+              text: `From: ${event.start.dateTime} to ${event.end.dateTime}` +
               `\nLocation: ${event.location}` +
               `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
               `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
-          };
-        })
-      });
-    }
+            };
+          })
+        });
+      }
+    });
   } else {
     log.error(`Missing a client, getEvent: ${getEvent},slackWebClient: ${slackWebClient}`);
   }
@@ -127,7 +128,7 @@ const setNotAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessa
 const initClients = () => {
   const gcalClient = googleClient.createGoogleClient(googleJwtClient);
   const addEvent = googleClient.quickAddEvent(gcalClient, CALENDAR_ID);
-  const getEvent = _.partial(googleClient.getEvent, gcalClient);
+  const getEvent = googleClient.getEvent(gcalClient);
   const gcalSlackClient = slackClient.createSlackClient(SLACK_API_TOKEN, addEvent);
   // Need as some methods not available in the rtm client
   const slackWebClient = new WebClient(SLACK_API_TOKEN);
