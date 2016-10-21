@@ -52,7 +52,9 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
 const listGcalEvents = (getEvent, slackWebClient, channelId) => {
   if (getEvent && slackWebClient) {
     log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
-    getEvent(CALENDAR_ID, (response) => {
+    const start = moment().startOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]');
+    const end = moment().endOf('day').utc().format('YYYY-MM-DD[T]HH:mm:ss[Z]');
+    getEvent(CALENDAR_ID, start, end, (response) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
         slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
