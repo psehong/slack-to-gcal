@@ -68,7 +68,7 @@ const listGcalEvents = (getEvent, start, end, slackWebClient, channelId) => {
     getEvent(CALENDAR_ID, start, end, (response) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
-        slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
+        slackWebClient.chat.postMessage(channelId, appUtil.gcalEventPhrase(response), {
           as_user: true,
           attachments: _(response.items)
             .sortBy(appUtil.gcalSort)

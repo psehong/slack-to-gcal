@@ -60,6 +60,12 @@ const gcalUpcomingRange = (dateFormat) => {
   return { start: start, end: end };
 };
 
+const gcalEventPhrase = (response) => {
+  const verb = response.items.length > 1 ? 'are' : 'is';
+  const event = response.items.length > 1 ? 'events': 'event';
+  return `There ${verb} ${response.items.length} ${event}`;
+};
+
 module.exports = {
   getEventIdFromSlackMsg: getEventIdFromSlackMsg,
   formatGcalTimes: formatGcalTimes,
@@ -67,5 +73,6 @@ module.exports = {
   gcalSort: gcalSort,
   gcalTodayRange: gcalTodayRange,
   gcalUpcomingRange: gcalUpcomingRange,
+  gcalEventPhrase: gcalEventPhrase,
   hasTime: hasTime
 };
