@@ -95,10 +95,9 @@ const findReactionMessage = (slackWebClient, gcalSlackClient, slackMessage, onRe
       log.info(`Message found for event ID: ${JSON.stringify(response)}`);
       onReactionMessageFound(reactionUser, response);
     });
-  } else if (!reactionUser.email) {
-    log.error(`reationUser must have an email address, message: ${JSON.stringify(slackMessage)}`);
   } else {
-    log.error(`Failed to get reactionUser for reaction added event and Slack message: ${JSON.stringify(slackMessage)}`);
+    log.error(`Failed to get reactionUser or reactionUser.profile.email for reaction added event and Slack message: ` +
+      `${JSON.stringify(slackMessage)}`);
   }
 };
 
