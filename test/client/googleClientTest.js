@@ -2,7 +2,7 @@ const _ = require('lodash');
 const rewire = require('rewire');
 const assert = require('chai').assert;
 
-const googleClient = rewire('../client/googleClient.js');
+const googleClient = rewire('../../client/googleClient.js');
 
 describe("googleClient", () => {
   describe("Update attendees", () => {

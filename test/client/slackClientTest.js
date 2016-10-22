@@ -1,6 +1,6 @@
 const assert = require('chai').assert;
 
-const slackClient = require('../client/slackClient.js');
+const slackClient = require('../../client/slackClient.js');
 
 describe("slackClient", () => {
   describe("Is actionable reaction event", () => {

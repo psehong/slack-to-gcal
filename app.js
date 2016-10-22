@@ -1,11 +1,13 @@
 const _ = require('lodash');
 const moment = require('moment-timezone');
-const slackClient = require('./client/slackClient.js');
-const googleClient = require('./client/googleClient.js');
 const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 const RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 const WebClient = require('@slack/client').WebClient;
 const bunyan = require('bunyan');
+
+const slackClient = require('./client/slackClient.js');
+const googleClient = require('./client/googleClient.js');
+const appUtil = require('./util/appUtil.js');
 
 const log = bunyan.createLogger({
   name: 'SlackToGcal',
@@ -69,21 +71,17 @@ const listGcalEvents = (getEvent, start, end, slackWebClient, channelId) => {
         slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
           as_user: true,
           attachments: _.map(response.items, (event) => {
-            const from = event.start.dateTime ?
-              moment(event.start.dateTime).clone().tz('America/New_York').format('h:mm A z') :
-              'None';
-            const to = event.end.dateTime ?
-              moment(event.end.dateTime).clone().tz('America/New_York').format('h:mm A z') :
-              'None';
+            const formattedTime = appUtil.formatGcalTimes(event);
+            const rsvps = appUtil.gcalRsvp(event);
             return {
               fallback: event.summary,
               color: '#FF69B4',
               title: event.summary,
               title_link: event.htmlLink,
-              text: `From: ${from} to ${to}` +
+              text: `From: ${formattedTime.from} to ${formattedTime.to}` +
                 `\nLocation: ${event.location ? event.location : 'None'}`,
-              footer: `\nAttending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'accepted').length}` +
-                `\nNot Attending: ${_.filter(event.attendees, (attendee) => attendee.responseStatus === 'declined').length}`
+              footer: `\nAttending: ${rsvps.accepted.length}` +
+                `\nNot Attending: ${rsvps.declined.length}`
             };
           })
         });
@@ -120,7 +118,7 @@ const setAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessage)
     googleClient.setAttendingEvent(
       gcalClient,
       CALENDAR_ID,
-      response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
+      appUtil.getEventIdFromSlackMsg(response.messages[0].text), {
         id: reactionUser.id,
         email: reactionUser.profile.email,
         displayName: reactionUser.profile.real_name,
@@ -134,7 +132,7 @@ const setNotAttending = (gcalClient, slackWebClient, gcalSlackClient, slackMessa
     googleClient.setNotAttendingEvent(
       gcalClient,
       CALENDAR_ID,
-      response.messages[0].text.split('Event ID: ')[1].split(',')[0], {
+      appUtil.getEventIdFromSlackMsg(response.messages[0].text), {
         id: reactionUser.id,
         email: reactionUser.profile.email,
         displayName: reactionUser.profile.real_name,
@@ -174,19 +172,26 @@ const initClients = () => {
     if (slackMessage && slackMessage.text && slackMessage.text.includes(SLACK_AT_BOT)) {
       log.info(`Received Slack message ${JSON.stringify(slackMessage)}`);
       if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'today') {
-        const start = moment().clone().tz('America/New_York').startOf('day').format(googleClient.GCAL_DATE_FORMAT);
-        const end = moment().clone().tz('America/New_York').endOf('day').format(googleClient.GCAL_DATE_FORMAT);
-        log.info(`Query, start: ${start}, end: ${end}`);
-        listGcalEvents(getEvent, start, end, slackWebClient, slackMessage.channel);
+        const range = appUtil.gcalTodayRange(googleClient.GCAL_DATE_FORMAT);
+        log.info(`Query, start: ${range.start}, end: ${range.end}`);
+        listGcalEvents(getEvent, range.start, range.end, slackWebClient, slackMessage.channel);
       } else if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'all') {
-        const start = moment().clone().tz('America/New_York').format(googleClient.GCAL_DATE_FORMAT);
-        const end = moment().clone().tz('America/New_York').add(1, 'year').format(googleClient.GCAL_DATE_FORMAT);
-        log.info(`Query, start: ${start}, end: ${end}`);
-        listGcalEvents(getEvent, start, end, slackWebClient, slackMessage.channel);
+        const range = appUtil.gcalUpcomingRange(googleClient.GCAL_DATE_FORMAT);
+        log.info(`Query, start: ${range.start}, end: ${range.end}`);
+        listGcalEvents(getEvent, range.start, range.end, slackWebClient, slackMessage.channel);
       } else {
-        addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
-          onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
-        });
+        if (appUtil.hasTime(slackMessage.text)) {
+          log.info(`SlackMessage found to have time: ${slackMessage.text}`);
+          addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
+            onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
+          });
+        } else {
+          log.info(`SlackMessage not found to have time: ${slackMessage.text}`);
+          gcalSlackClient.sendMessage(
+            `It looks like your message doesn't have a time! Please add a time, including the meridiem, e.g.:`+
+            `\n3AM, 4 PM, 8:30PM to 9:30PM, 9PM for 30 minutes`,
+            slackMessage.channel);
+        }
       }
     }
   });

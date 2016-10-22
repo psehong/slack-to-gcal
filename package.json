@@ -9,7 +9,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "node ./node_modules/mocha/bin/mocha",
+    "test": "node ./node_modules/mocha/bin/mocha --recursive",
     "jshint": "node ./node_modules/jshint/bin/jshint **.js"
   },
   "author": "Peter Hong <psehong@gmail.com>",
