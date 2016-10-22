@@ -6,6 +6,7 @@ const moment = require('moment-timezone');
 const log = bunyan.createLogger({name: 'googleClient'});
 
 const DEFAULT_SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const GCAL_DATE_FORMAT = 'YYYY-MM-DD[T]HH:mm:ssZ';
 
 const createJwtClient = (pathToKey, scopes) => {
   const key = require(pathToKey);
@@ -136,5 +137,6 @@ module.exports = {
   quickAddEvent: quickAddEvent,
   setAttendingEvent: setAttendingEvent,
   setNotAttendingEvent: setNotAttendingEvent,
-  getEvent: getEvent
+  getEvent: getEvent,
+  GCAL_DATE_FORMAT: GCAL_DATE_FORMAT
 };
