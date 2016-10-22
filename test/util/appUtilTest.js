@@ -27,15 +27,28 @@ describe("appUtil", () => {
     });
   });
   describe("formatGcalTimes", () => {
+    const mockEvent = {
+      summary: 'asummary',
+      htmlLink: 'alink',
+      attendees: [{
+        responseStatus: 'accepted'
+      }, {
+        responseStatus: 'accepted'
+      }, {
+        responseStatus: 'declined'
+      }, {
+        responseStatus: 'accepted'
+      }, {
+        responseStatus: 'declined'
+      }],
+      start: {
+        dateTime: '2016-10-23T02:53:39Z'
+      },
+      end: {
+        dateTime: '2016-10-23T03:53:39Z'
+      }
+    };
     it("Formats human readable GCal times", () => {
-      const mockEvent = {
-        start: {
-          dateTime: '2016-10-22T22:53:39-4:00'
-        },
-        end: {
-          dateTime: '2016-10-22T23:53:39-4:00'
-        }
-      };
       const expected = {
         from: '10:53 PM EDT',
         to: '11:53 PM EDT',
@@ -47,27 +60,6 @@ describe("appUtil", () => {
   });
   describe("gcalEventToSlackEvent", () => {
     it("Converts GCal event to formatted Slack message", () => {
-      const mockEvent = {
-        summary: 'asummary',
-        htmlLink: 'alink',
-        attendees: [{
-          responseStatus: 'accepted'
-        }, {
-          responseStatus: 'accepted'
-        }, {
-          responseStatus: 'declined'
-        }, {
-          responseStatus: 'accepted'
-        }, {
-          responseStatus: 'declined'
-        }],
-        start: {
-          dateTime: '2016-10-23T02:53:39Z'
-        },
-        end: {
-          dateTime: '2016-10-23T03:53:39Z'
-        }
-      };
       const expected = {
         fallback: 'asummary – Saturday 10/22',
         color: '#FF69B4',
