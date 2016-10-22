@@ -63,7 +63,7 @@ const gcalUpcomingRange = (dateFormat) => {
 const gcalEventPhrase = (response) => {
   const verb = response.items.length > 1 ? 'are' : 'is';
   const event = response.items.length > 1 ? 'events': 'event';
-  return `There ${verb} ${response.items.length} ${event}`;
+  return `There ${verb} ${response.items.length} ${event} upcoming`;
 };
 
 module.exports = {

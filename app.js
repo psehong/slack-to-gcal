@@ -68,26 +68,30 @@ const listGcalEvents = (getEvent, start, end, slackWebClient, channelId) => {
     getEvent(CALENDAR_ID, start, end, (response) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
-        slackWebClient.chat.postMessage(channelId, appUtil.gcalEventPhrase(response), {
-          as_user: true,
-          attachments: _(response.items)
-            .sortBy(appUtil.gcalSort)
-            .map((event) => {
-              const formattedTime = appUtil.formatGcalTimes(event);
-              const rsvps = appUtil.gcalRsvp(event);
-              return {
-                fallback: `${event.summary} – ${formattedTime.day}`,
-                color: '#FF69B4',
-                title: `${event.summary} – ${formattedTime.day}`,
-                title_link: event.htmlLink,
-                text: `${formattedTime.from} to ${formattedTime.to}` +
+        if (response.items.length > 0) {
+          slackWebClient.chat.postMessage(channelId, appUtil.gcalEventPhrase(response), {
+            as_user: true,
+            attachments: _(response.items)
+              .sortBy(appUtil.gcalSort)
+              .map((event) => {
+                const formattedTime = appUtil.formatGcalTimes(event);
+                const rsvps = appUtil.gcalRsvp(event);
+                return {
+                  fallback: `${event.summary} – ${formattedTime.day}`,
+                  color: '#FF69B4',
+                  title: `${event.summary} – ${formattedTime.day}`,
+                  title_link: event.htmlLink,
+                  text: `${formattedTime.from} to ${formattedTime.to}` +
                   `\nLocation: ${event.location ? event.location : 'None'}`,
-                footer: `\nAttending: ${rsvps.accepted.length}` +
+                  footer: `\nAttending: ${rsvps.accepted.length}` +
                   `\nNot Attending: ${rsvps.declined.length}`
-              };
-            })
-            .value()
-        });
+                };
+              })
+              .value()
+          });
+        } else {
+          slackWebClient.chat.postMessage(channelId, "There are no upcoming events", { as_user: true });
+        }
       }
     });
   } else {
