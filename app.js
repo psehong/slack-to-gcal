@@ -74,11 +74,11 @@ const listGcalEvents = (getEvent, start, end, slackWebClient, channelId) => {
             const formattedTime = appUtil.formatGcalTimes(event);
             const rsvps = appUtil.gcalRsvp(event);
             return {
-              fallback: event.summary,
+              fallback: `${event.summary} ${formattedTime.day}`,
               color: '#FF69B4',
-              title: event.summary,
+              title: `${event.summary} ${formattedTime.day}`,
               title_link: event.htmlLink,
-              text: `From: ${formattedTime.from} to ${formattedTime.to}` +
+              text: `${formattedTime.from} to ${formattedTime.to}` +
                 `\nLocation: ${event.location ? event.location : 'None'}`,
               footer: `\nAttending: ${rsvps.accepted.length}` +
                 `\nNot Attending: ${rsvps.declined.length}`
