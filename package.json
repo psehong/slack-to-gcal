@@ -1,6 +1,6 @@
 {
   "name": "slack-to-gcal",
-  "version": "0.0.1",
+  "version": "0.0.7",
   "description": "Slack -> GCal svc acct",
   "repository": {
     "type": "git",
