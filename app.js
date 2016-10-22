@@ -60,12 +60,9 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
   }
 };
 
-const listGcalEvents = (getEvent, slackWebClient, channelId) => {
+const listGcalEvents = (getEvent, start, end, slackWebClient, channelId) => {
   if (getEvent && slackWebClient) {
     log.info(`Listing GCal events for calendarId: ${CALENDAR_ID}`);
-    const start = moment().clone().tz('America/New_York').startOf('day').format('YYYY-MM-DD[T]HH:mm:ssZ');
-    const end = moment().clone().tz('America/New_York').endOf('day').format('YYYY-MM-DD[T]HH:mm:ssZ');
-    log.info(`Query, start: ${start}, end: ${end}`);
     getEvent(CALENDAR_ID, start, end, (response) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
@@ -177,7 +174,15 @@ const initClients = () => {
     if (slackMessage && slackMessage.text && slackMessage.text.includes(SLACK_AT_BOT)) {
       log.info(`Received Slack message ${JSON.stringify(slackMessage)}`);
       if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'today') {
-        listGcalEvents(getEvent, slackWebClient, slackMessage.channel);
+        const start = moment().clone().tz('America/New_York').startOf('day').format(googleClient.GCAL_DATE_FORMAT);
+        const end = moment().clone().tz('America/New_York').endOf('day').format(googleClient.GCAL_DATE_FORMAT);
+        log.info(`Query, start: ${start}, end: ${end}`);
+        listGcalEvents(getEvent, start, end, slackWebClient, slackMessage.channel);
+      } else if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'all') {
+        const start = moment().clone().tz('America/New_York').format(googleClient.GCAL_DATE_FORMAT);
+        const end = moment().clone().tz('America/New_York').add(1, 'year').format(googleClient.GCAL_DATE_FORMAT);
+        log.info(`Query, start: ${start}, end: ${end}`);
+        listGcalEvents(getEvent, start, end, slackWebClient, slackMessage.channel);
       } else {
         addEvent(slackMessage.text.split(SLACK_AT_BOT)[1].trim(), (gcalResponse) => {
           onGcalEventAdd(slackMessage, gcalResponse, gcalSlackClient);
