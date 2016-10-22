@@ -50,7 +50,7 @@ const onGcalEventAdd = (slackMessage, gcalResponse, gcalSlackClient) => {
     log.info(`Created GCal event with response: ${JSON.stringify(gcalResponse)}`);
     gcalSlackClient.sendMessage(
       `*Event Title: ${gcalResponse.summary}*` +
-      `\nCreated event, edit or view here: ${gcalResponse.htmlLink}` +
+      `\n\nCreated event, edit or view here: ${gcalResponse.htmlLink}` +
       `\nReact with :white_check_mark: to RSVP *yes*!` +
       `\nReact with :x: or remove your :white_check_mark: reaction to RSVP *no*!` +
       `\nEvent ID: ${gcalResponse.id}`,
@@ -68,23 +68,30 @@ const listGcalEvents = (getEvent, start, end, slackWebClient, channelId) => {
     getEvent(CALENDAR_ID, start, end, (response) => {
       log.info(`Events: ${JSON.stringify(response)}`);
       if (response && response.items) {
-        slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
-          as_user: true,
-          attachments: _.map(response.items, (event) => {
-            const formattedTime = appUtil.formatGcalTimes(event);
-            const rsvps = appUtil.gcalRsvp(event);
-            return {
-              fallback: event.summary,
-              color: '#FF69B4',
-              title: event.summary,
-              title_link: event.htmlLink,
-              text: `From: ${formattedTime.from} to ${formattedTime.to}` +
-                `\nLocation: ${event.location ? event.location : 'None'}`,
-              footer: `\nAttending: ${rsvps.accepted.length}` +
-                `\nNot Attending: ${rsvps.declined.length}`
-            };
-          })
-        });
+        if (response.items.length > 0) {
+          slackWebClient.chat.postMessage(channelId, appUtil.gcalEventPhrase(response), {
+            as_user: true,
+            attachments: _(response.items)
+              .sortBy(appUtil.gcalSort)
+              .map((event) => {
+                const formattedTime = appUtil.formatGcalTimes(event);
+                const rsvps = appUtil.gcalRsvp(event);
+                return {
+                  fallback: `${event.summary} – ${formattedTime.day}`,
+                  color: '#FF69B4',
+                  title: `${event.summary} – ${formattedTime.day}`,
+                  title_link: event.htmlLink,
+                  text: `${formattedTime.from} to ${formattedTime.to}` +
+                  `\nLocation: ${event.location ? event.location : 'None'}`,
+                  footer: `\nAttending: ${rsvps.accepted.length}` +
+                  `\nNot Attending: ${rsvps.declined.length}`
+                };
+              })
+              .value()
+          });
+        } else {
+          slackWebClient.chat.postMessage(channelId, "There are no upcoming events", { as_user: true });
+        }
       }
     });
   } else {
@@ -189,7 +196,7 @@ const initClients = () => {
           log.info(`SlackMessage not found to have time: ${slackMessage.text}`);
           gcalSlackClient.sendMessage(
             `It looks like your message doesn't have a time! Please add a time, including the meridiem, e.g.:`+
-            `\n3AM, 4 PM, 8:30PM to 9:30PM, 9PM for 30 minutes`,
+            `\n\`3AM, 4 PM, 8:30PM to 9:30PM, 9PM for 30 minutes\``,
             slackMessage.channel);
         }
       }

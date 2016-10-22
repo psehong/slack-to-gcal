@@ -23,9 +23,10 @@ const formatGcalTimes = (event) => {
     const to = event.end.dateTime ?
       moment(event.end.dateTime).clone().tz('America/New_York').format('h:mm A z') :
       'None';
-    return { from: from, to: to };
+    const day = moment(event.start.dateTime).clone().tz('America/New_York').format('dddd M/D');
+    return { from: from, to: to, day: day };
   } else {
-    return { from: 'None', to: 'None' };
+    return { from: 'None', to: 'None', day: 'None' };
   }
 };
 
@@ -43,6 +44,10 @@ const gcalRsvp = (event) => {
   };
 };
 
+const gcalSort = (event) => {
+  return moment(event.start.dateTime).unix();
+};
+
 const gcalTodayRange = (dateFormat) => {
   const start = moment().clone().tz('America/New_York').startOf('day').format(dateFormat);
   const end = moment().clone().tz('America/New_York').endOf('day').format(dateFormat);
@@ -55,11 +60,19 @@ const gcalUpcomingRange = (dateFormat) => {
   return { start: start, end: end };
 };
 
+const gcalEventPhrase = (response) => {
+  const verb = response.items.length > 1 ? 'are' : 'is';
+  const event = response.items.length > 1 ? 'events': 'event';
+  return `There ${verb} ${response.items.length} ${event} upcoming`;
+};
+
 module.exports = {
   getEventIdFromSlackMsg: getEventIdFromSlackMsg,
   formatGcalTimes: formatGcalTimes,
   gcalRsvp: gcalRsvp,
+  gcalSort: gcalSort,
   gcalTodayRange: gcalTodayRange,
   gcalUpcomingRange: gcalUpcomingRange,
+  gcalEventPhrase: gcalEventPhrase,
   hasTime: hasTime
 };
