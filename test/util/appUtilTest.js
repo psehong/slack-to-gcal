@@ -62,10 +62,10 @@ describe("appUtil", () => {
           responseStatus: 'declined'
         }],
         start: {
-          dateTime: '2016-10-22T22:53:39-4:00'
+          dateTime: '2016-10-23T02:53:39Z'
         },
         end: {
-          dateTime: '2016-10-22T23:53:39-4:00'
+          dateTime: '2016-10-23T03:53:39Z'
         }
       };
       const expected = {
