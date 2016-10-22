@@ -44,6 +44,10 @@ const gcalRsvp = (event) => {
   };
 };
 
+const gcalSort = (event) => {
+  return moment(event.start.dateTime).unix();
+};
+
 const gcalTodayRange = (dateFormat) => {
   const start = moment().clone().tz('America/New_York').startOf('day').format(dateFormat);
   const end = moment().clone().tz('America/New_York').endOf('day').format(dateFormat);
@@ -60,6 +64,7 @@ module.exports = {
   getEventIdFromSlackMsg: getEventIdFromSlackMsg,
   formatGcalTimes: formatGcalTimes,
   gcalRsvp: gcalRsvp,
+  gcalSort: gcalSort,
   gcalTodayRange: gcalTodayRange,
   gcalUpcomingRange: gcalUpcomingRange,
   hasTime: hasTime

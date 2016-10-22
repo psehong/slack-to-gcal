@@ -70,20 +70,23 @@ const listGcalEvents = (getEvent, start, end, slackWebClient, channelId) => {
       if (response && response.items) {
         slackWebClient.chat.postMessage(channelId, `There are ${response.items.length} events today`, {
           as_user: true,
-          attachments: _.map(response.items, (event) => {
-            const formattedTime = appUtil.formatGcalTimes(event);
-            const rsvps = appUtil.gcalRsvp(event);
-            return {
-              fallback: `${event.summary} ${formattedTime.day}`,
-              color: '#FF69B4',
-              title: `${event.summary} ${formattedTime.day}`,
-              title_link: event.htmlLink,
-              text: `${formattedTime.from} to ${formattedTime.to}` +
-                `\nLocation: ${event.location ? event.location : 'None'}`,
-              footer: `\nAttending: ${rsvps.accepted.length}` +
-                `\nNot Attending: ${rsvps.declined.length}`
-            };
-          })
+          attachments: _(response.items)
+            .sortBy(appUtil.gcalSort)
+            .map((event) => {
+              const formattedTime = appUtil.formatGcalTimes(event);
+              const rsvps = appUtil.gcalRsvp(event);
+              return {
+                fallback: `${event.summary} – ${formattedTime.day}`,
+                color: '#FF69B4',
+                title: `${event.summary} – ${formattedTime.day}`,
+                title_link: event.htmlLink,
+                text: `${formattedTime.from} to ${formattedTime.to}` +
+                  `\nLocation: ${event.location ? event.location : 'None'}`,
+                footer: `\nAttending: ${rsvps.accepted.length}` +
+                  `\nNot Attending: ${rsvps.declined.length}`
+              };
+            })
+            .value()
         });
       }
     });
