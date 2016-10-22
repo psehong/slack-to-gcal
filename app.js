@@ -186,6 +186,11 @@ const initClients = () => {
         const range = appUtil.gcalUpcomingRange(googleClient.GCAL_DATE_FORMAT);
         log.info(`Query, start: ${range.start}, end: ${range.end}`);
         listGcalEvents(getEvent, range.start, range.end, slackWebClient, slackMessage.channel);
+      } else if (slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'tmrw' ||
+          slackMessage.text.split(SLACK_AT_BOT)[1].trim().toLowerCase() === 'tomorrow') {
+        const range = appUtil.gcalTmrwRange(googleClient.GCAL_DATE_FORMAT);
+        log.info(`Query, start: ${range.start}, end: ${range.end}`);
+        listGcalEvents(getEvent, range.start, range.end, slackWebClient, slackMessage.channel);
       } else {
         if (appUtil.hasTime(slackMessage.text)) {
           log.info(`SlackMessage found to have time: ${slackMessage.text}`);
@@ -196,7 +201,7 @@ const initClients = () => {
           log.info(`SlackMessage not found to have time: ${slackMessage.text}`);
           gcalSlackClient.sendMessage(
             `It looks like your message doesn't have a time! Please add a time, including the meridiem, e.g.:`+
-            `\n\`3AM, 4 PM, 8:30PM to 9:30PM, 9PM for 30 minutes\``,
+            `\n\`3AM today, 4 PM tomorrow, 8:30PM to 9:30PM on 8/31, 9PM for 30 minutes on 9/2\``,
             slackMessage.channel);
         }
       }

@@ -54,6 +54,12 @@ const gcalTodayRange = (dateFormat) => {
   return { start: start, end: end };
 };
 
+const gcalTmrwRange = (dateFormat) => {
+  const start = moment().clone().add(1, 'day').tz('America/New_York').startOf('day').format(dateFormat);
+  const end = moment().clone().add(1, 'day').tz('America/New_York').endOf('day').format(dateFormat);
+  return { start: start, end: end };
+};
+
 const gcalUpcomingRange = (dateFormat) => {
   const start = moment().clone().tz('America/New_York').format(dateFormat);
   const end = moment().clone().tz('America/New_York').add(1, 'year').format(dateFormat);
@@ -72,6 +78,7 @@ module.exports = {
   gcalRsvp: gcalRsvp,
   gcalSort: gcalSort,
   gcalTodayRange: gcalTodayRange,
+  gcalTmrwRange: gcalTmrwRange,
   gcalUpcomingRange: gcalUpcomingRange,
   gcalEventPhrase: gcalEventPhrase,
   hasTime: hasTime
