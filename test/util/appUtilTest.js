@@ -42,7 +42,7 @@ describe("appUtil", () => {
         day: 'Saturday 10/22'
       };
       const actual = appUtil.__get__('formatGcalTimes')(mockEvent);
-      assert.isTrue(_.isEqual(expected, actual));
+      assert.deepEqual(expected, actual);
     });
   });
   describe("gcalEventToSlackEvent", () => {
@@ -77,7 +77,7 @@ describe("appUtil", () => {
         footer: '\nAttending: 3\nNot Attending: 2'
       };
       const actual = appUtil.gcalEventToSlackEvent(mockEvent);
-      assert.isTrue(_.isEqual(expected, actual));
+      assert.deepEqual(expected, actual);
     });
   });
 });
