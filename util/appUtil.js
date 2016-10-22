@@ -9,7 +9,7 @@ const hasTime = (msg) => {
 };
 
 const getEventIdFromSlackMsg = (msg) => {
-  if (msg) {
+  if (msg && msg.includes('Event ID: ')) {
     return msg.split('Event ID: ')[1].split(',')[0];
   }
   return '';
@@ -23,7 +23,9 @@ const formatGcalTimes = (event) => {
     const to = event.end.dateTime ?
       moment(event.end.dateTime).clone().tz('America/New_York').format('h:mm A z') :
       'None';
-    const day = moment(event.start.dateTime).clone().tz('America/New_York').format('dddd M/D');
+    const day = event.end.dateTime ?
+      moment(event.start.dateTime).clone().tz('America/New_York').format('dddd M/D') :
+      'None';
     return { from: from, to: to, day: day };
   } else {
     return { from: 'None', to: 'None', day: 'None' };
@@ -72,10 +74,24 @@ const gcalEventPhrase = (response) => {
   return `There ${verb} ${response.items.length} ${event} upcoming`;
 };
 
+const gcalEventToSlackEvent = (event) => {
+  const formattedTime = formatGcalTimes(event);
+  const rsvps = gcalRsvp(event);
+  return {
+    fallback: `${event.summary} – ${formattedTime.day}`,
+    color: '#FF69B4',
+    title: `${event.summary} – ${formattedTime.day}`,
+    title_link: event.htmlLink,
+    text: `${formattedTime.from} to ${formattedTime.to}` +
+    `\nLocation: ${event.location ? event.location : 'None'}`,
+    footer: `\nAttending: ${rsvps.accepted.length}` +
+    `\nNot Attending: ${rsvps.declined.length}`
+  };
+};
+
 module.exports = {
   getEventIdFromSlackMsg: getEventIdFromSlackMsg,
-  formatGcalTimes: formatGcalTimes,
-  gcalRsvp: gcalRsvp,
+  gcalEventToSlackEvent: gcalEventToSlackEvent,
   gcalSort: gcalSort,
   gcalTodayRange: gcalTodayRange,
   gcalTmrwRange: gcalTmrwRange,
