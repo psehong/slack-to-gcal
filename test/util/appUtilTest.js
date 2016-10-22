@@ -4,6 +4,27 @@ const assert = require('chai').assert;
 
 const appUtil = rewire('../../util/appUtil.js');
 
+const mockEvent = {
+  summary: 'asummary',
+  htmlLink: 'alink',
+  attendees: [{
+    responseStatus: 'accepted'
+  }, {
+    responseStatus: 'accepted'
+  }, {
+    responseStatus: 'declined'
+  }, {
+    responseStatus: 'accepted'
+  }, {
+    responseStatus: 'declined'
+  }],
+  start: {
+    dateTime: '2016-10-23T02:53:39Z'
+  },
+  end: {
+    dateTime: '2016-10-23T03:53:39Z'
+  }
+};
 
 describe("appUtil", () => {
   describe("hasText", () => {
@@ -27,27 +48,6 @@ describe("appUtil", () => {
     });
   });
   describe("formatGcalTimes", () => {
-    const mockEvent = {
-      summary: 'asummary',
-      htmlLink: 'alink',
-      attendees: [{
-        responseStatus: 'accepted'
-      }, {
-        responseStatus: 'accepted'
-      }, {
-        responseStatus: 'declined'
-      }, {
-        responseStatus: 'accepted'
-      }, {
-        responseStatus: 'declined'
-      }],
-      start: {
-        dateTime: '2016-10-23T02:53:39Z'
-      },
-      end: {
-        dateTime: '2016-10-23T03:53:39Z'
-      }
-    };
     it("Formats human readable GCal times", () => {
       const expected = {
         from: '10:53 PM EDT',
