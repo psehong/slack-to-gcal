@@ -86,7 +86,7 @@ const findReactionMessage = (slackWebClient, gcalSlackClient, slackMessage, onRe
   const reactionUser = gcalSlackClient.dataStore.getUserById(slackMessage.user);
   if (reactionUser && reactionUser.profile.email) {
     log.info(`Found reaction user: ${JSON.stringify(reactionUser)}`);
-    slackWebClient.groups.history(slackMessage.item.channel, {
+    slackWebClient.channels.history(slackMessage.item.channel, {
       channel: slackMessage.item.channel,
       latest: slackMessage.item.ts,
       count: 1,
